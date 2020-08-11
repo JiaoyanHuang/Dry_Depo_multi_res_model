@@ -1,8 +1,9 @@
 # version: v01.00
 # Author: Joey/Jiaoyan Huang
 # Contact: jhuang@sonomatech.com
-# Created: 05/16/2020
+# Created: 07/21/2020
 library(readxl)
+# library(here) here seems not working well under gitbash condistion
 
 #functions
 # Define the function for saturation vapor pressure (mb)
@@ -26,9 +27,10 @@ ALPHA <- 2 # scaling factor
 BETA  <- 2 # scaling factor
 Dp <- 0.68 # paritcle diameter
 RHOP <- 1200  #1769 was used in Zhang et al 2001, but I feel 1200 make more sense to normal aerosol particle density kg/m3
-  
-MET_file <- "C:/Users/jhuang/Desktop/JH other projects/Zepplin_GOMdrydepo_2019_so_V2.xlsx"
-
+setwd("C:/Users/jhuang/Dry_Depo_multi_res_model")  #where you download the repo
+# MET_file <- "C:/Users/jhuang/Desktop/JH other projects/Zepplin_GOMdrydepo_2019_so_V2.xlsx"
+source("Hg_dry_depo_related_data.R")
+MET_file <- "Zepplin_GOMdrydepo_2019_so_V2.xlsx"
 MET_data <- read_excel(MET_file,1)
 MET_data$IYR <- as.numeric(substring(MET_data$time,1,4))
 MET_data$IMO <- as.numeric(substring(MET_data$time,6,7))
@@ -43,49 +45,14 @@ MET_data$short2 <- cos(GLON)*cos(MET_data$declin)
 MET_data$cosze <- (as.numeric(MET_data$IH)-12)*pi/12
 MET_data$coszen <- MET_data$short1+MET_data$short2*cos(MET_data$cosze)
 MET_data$RH <- MET_data$rh
+
 #interpolate LAI, LAI data
-# c(J, F, M, A, M, J, J, A, S, O, N, D, J, min, max)
-LAI1 <- rep(0, 13)
-LAI2 <- rep(0, 13)
-LAI3 <- rep(0, 13)
-LAI4 <- rep(5, 13)
-LAI5 <- rep(6, 13)
-LAI6 <- c(0.1, 0.1, 0.5, 1, 2, 4, 5, 5, 4, 2, 1, 0.1, 0.1)
-LAI7 <- c(0.1, 0.1, 0.5, 1, 2, 4, 5, 5, 4, 2, 1, 0.1, 0.1)
-LAI8 <- rep(6, 13)
-LAI9 <- rep(4, 13)
-LAI10 <- rep(3, 13)
-LAI11 <- c(0.5, 0.5, 1, 1, 1.5, 2, 3, 3, 2, 1.5, 1, 0.5, 0.5)
-LAI12 <- rep(3, 13)
-LAI13 <- rep(1, 13)
-LAI14 <- c(0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1, 2, 2, 1.5, 1, 1, 0.5)
-LAI15 <- c(0.1, 0.1, 0.1, 0.5, 1, 2, 3, 3.5, 4, 0.1, 0.1, 0.1, 0.1)
-LAI16 <- c(0.1, 0.1, 0.1, 0.5, 1, 2.5, 4, 5, 6, 0.1, 0.1, 0.1, 0.1)
-LAI17 <- c(0.1, 0.1, 0.1, 0.5, 1, 3, 4, 4.5, 5, 0.1, 0.1, 0.1, 0.1)
-LAI18 <- c(0.1, 0.1, 0.1, 0.5, 1, 2, 3, 3.5, 4, 0.1, 0.1, 0.1, 0.1)
-LAI19 <- c(0.1, 0.1, 0.1, 0.5, 1, 3, 4, 4.5, 5, 0.1, 0.1, 0.1, 0.1)
-LAI20 <- rep(1, 13)
-LAI21 <- c(0.1, 0.1, 0.1, 0.1, 0.5, 1, 1, 1, 1, 1, 0.4, 0.1, 0.1)
-LAI22 <- c(1, 1, 0.5, 0.1, 0.1, 0.1, 0.1, 1, 2, 1.5, 1.5, 1, 1)
-LAI23 <- rep(4, 13)
-LAI24 <- rep(0, 13)
-LAI25 <- c(3, 3, 3, 4, 4.5, 5, 5, 5, 4, 3, 3, 3, 3)
-LAI26 <- c(3, 3, 3, 4, 4.5, 5, 5, 5, 4, 3, 3, 3, 3)
-LAI <- data.frame(cbind(LAI1,  LAI2,  LAI3,  LAI4,  LAI5,  LAI6,  LAI7,  LAI8,  LAI9,  LAI10, 
-                        LAI11, LAI12, LAI13, LAI14, LAI15, LAI16, LAI17, LAI18, LAI19, LAI20, 
-                        LAI21, LAI22, LAI23, LAI24, LAI25, LAI26))
 MET_data$LAI_F  = LAI[MET_data$IMO,LUC]+ MET_data$ID/ 30.5 * (LAI[MET_data$IMO,LUC]-LAI[MET_data$IMO+1,LUC])
-
-#Z02 Z01 look up table
-
-Z01 <- c(0.0, 0.01, 0.0, 0.9, 2.0, 0.4, 0.4, 2.5, 0.6, 0.2, 0.05, 0.2, 0.04, 0.02, 0.02,
-         0.02, 0.02, 0.02, 0.02, 0.05, 1.0 , 0.03, 0.1, 0.04, 0.6, 0.6)
-Z02 <- c(0.0, 0.01, 0.0, 0.9, 2.0, 0.9, 1.0, 2.5, 0.6, 0.2, 0.2, 0.2, 0.04, 0.1, 0.1,
-         0.1, 0.1, 0.1, 0.2, 0.05, 1.0, 0.03, 0.1, 0.04, 0.9, 0.9)
 
 #calculate ES=saturation vapor pressure (mb) at 2 m and at soil surface
 MET_data$ES2= 6.108*exp(17.27*(MET_data$t2m - 273.16)/(MET_data$t2m - 35.86))
 MET_data$ESS= 6.108*exp(17.27*(MET_data$skt - 273.16)/(MET_data$skt - 35.86))
+MET_data$u2_adjusted <- 0
 for (r in nrow(MET_data)){
   #Set minimum wind speed as 1.0 m/s 
   MET_data$u2_adjusted[r] = max(MET_data$u2[r],1)
@@ -191,13 +158,8 @@ if(LUC == 1 | LUC == 3){
   MET_data$Ra[n] <- 1000
 }
 
-
-
 # Only calculate stomatal resistance if there is solar radiation, 
 # leaf area index is not zero, and within reasonable temperature range
-
-tmin <- c(-999, -999, -999, -5, 0, -5, 0, 0, 0, 0, -5, 0, 5, 5, 5, 5, 5, 5, 10, 5, 0, -5, 0 , -999, -3, 0)
-tmax <- c(-999, -999, -999, 40, 45, 40, 45, 45, 45, 45, 40, 45, 40, 45, 45, 45, 45, 45, 45, 45, 45, 40, 45, -999, 42, 45)
 RDU <- RDV <- WW1 <- WW2 <- WW <- RDM <- RDN <- RV <- RN <- array(0,nrow(MET_data))
 RATIO <- SV <- FV1 <- FV <- PARDIR <- PARDIF <- array(0,nrow(MET_data))
 
@@ -206,7 +168,7 @@ n <- which(MET_data$ssrd >= 0.1 & MET_data$skt < (tmax[LUC] + 273.15) &  MET_dat
 RDU[n] <- 600*exp(-0.185/MET_data$coszen[n])*MET_data$coszen[n]
 RDV[n] <- 0.4*(600-RDU[n])*MET_data$coszen[n]
 WW1[n] <- -log(MET_data$coszen[n])/2.302585
-WW2[n] <- -1.195+0.4459*WW1[n]-0.0345*WW1[m]^2
+WW2[n] <- -1.195+0.4459*WW1[n]-0.0345*WW1[n]^2
 WW[n] <- 1320*10**WW2[n]
 RDM[n] <- (720.*exp(-0.06/MET_data$coszen[n])-WW[n])*MET_data$coszen[n]
 RDN[n] <- 0.6*(720-RDM[n]-WW[n])*MET_data$coszen[n]
@@ -233,11 +195,6 @@ n <- which(MET_data$LAI_F <= 2.5 | MET_data$ssrd <= 200)
 PSHAD[n] <- PARDIF[n]*exp(-0.5*MET_data$LAI_F[n]^0.7) + 0.07*PARDIR[n]*(1.1-0.1*MET_data$LAI_F[n])*exp(-MET_data$coszen[n])
 PSUN[n] <- PARDIR[n]*0.5/MET_data$coszen[n] + PSHAD[n]
 
-#Rsmin data
-RSmin <- c(-999, -999, -999, 250, 150, 250, 150, 150, 250, 150, 150, 250, 150, 100, 120, 120, 120, 250, 125, 150, 200, 150, 150, -999, 150, 150)
-#BRS data
-BRS <- c(-999, -999, -999, 44, 40, 44, 43, 40, 44, 40, 44, 44, 50, 20, 40, 40, 50, 65, 65, 40, 42, 25, 40, -999, 44, 43)
-
 RSHAD <- RSmin[LUC]+BRS[LUC]*RSmin[LUC]/PSHAD 
 RSUN  <- RSmin[LUC]+BRS[LUC]*RSmin[LUC]/PSUN
 GSHAD <- 1/RSHAD
@@ -252,29 +209,17 @@ GSPAR <- FSUN * GSUN + FSHAD * GSHAD
 
 # function for temperature effect, in R T means TRUE, so I changed T to Temp
 Temp <- MET_data$skt - 273.15      
-#Topt
-topt <- c(-999, -999, -999, 15, 30, 15, 27, 30, 25, 30, 15, 25, 30, 25, 27, 27, 25, 25, 30, 25, 22, 20, 20, -999, 21, 25)
 BT <- (tmax[LUC] - topt[LUC])/(tmax[LUC] - tmin[LUC])
 GT <- (tmax[LUC]-Temp)/(tmax[LUC] - topt[LUC])
 GT <- GT^BT
 GT <- GT*(Temp-tmin[LUC])/(topt[LUC]-tmin[LUC]) 
 
 # function for vapor pressure deficit 
-#BVPD
-BVPD <- c(-999, -999, -999, 0.31, 0.27, 0.31, 0.36, 0.27, 0.31, 0.27, 0.27, 0.27, 0, 
-          0, 0, 0, 0, 0, 0, 0, 0.31, 0.24, 0.27, -999, 0.34, 0.31)
 ES_skt <- ES(MET_data$skt)
 D0 <- ES_skt*(1 - MET_data$RH)/10           # kPa 
 GD <- 1 -BVPD[LUC]*D0
 
 # function for water stress 
-# PSI1
-PSI1 <- c(-999, -999, -999, -2, -1, -2, -1.9, -1, -1, -2, -2, -2 , -1.5 , -1.5, -1.5, 
-          -1.5, -1.5, -1.5, -1.5, -1.5, -1.5, 0, -1.5, -999, -2, -2)
-# PSI2
-PSI2 <- c(-999, -999, -999, -2.5, -5, -2.5, -2.5, -5.0, -4.0, -4.0, -4.0, -3.5, -2.5,
-          -2.5, -2.5, -2.5, -2.5, -2.5, -2.5, -2.5, -3, -1.5, -2.5, -999, -2.5, -3)
-
 PSI <- (-0.72-0.0013*MET_data$ssrd)
 GW  <- (PSI-PSI2[LUC])/(PSI1[LUC]-PSI2[LUC])
 GW[which(GW > 1)] <- 1
@@ -315,19 +260,10 @@ WST[n] <- (MET_data$ssrd[n] - 200)/800
 WST[which(WST > 0.5)] <- 0.5
 
 # In-canopy aerodynamic resistance 
-# Rac1
-Rac1 <- c(0, 0.01, 0, 0.9, 2, 0.4, 0.4, 2.5, 0.6, 0.2, 0.05, 0.2, 0.04, 
-          0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.05, 1, 0.03, 0.1, 0.04, 0.6, 0.6)
-# Rac2
-Rac2 <- c(0, 0.01, 0, 0.9, 2, 0.9, 1, 2.5, 0.6, 0.2, 0.2, 0.2, 0.04, 0.1, 0.1, 
-          0.1, 0.1, 0.1, 0.2, 0.05, 1, 0.03, 0.1, 0.04, 0.9, 0.9)
 Rac <- Rac1[LUC]+(MET_data$LAI_F-min(LAI[,LUC]))/(max(LAI[,LUC])-min(LAI[,LUC])+1.E-10)*(Rac2[LUC]-Rac1[LUC]) 
 Rac <- Rac*MET_data$LAI_F^0.25/MET_data$USTAR/MET_data$USTAR 
 
 # Ground resistance for O3 
-#RgO
-RgO <- c(2000, 2000, 2000, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 
-         200, 200, 200, 200, 200, 200, 500, 500, 500, 500, 500, 200, 200)
 RgO_F <- array(RgO[LUC],nrow(MET_data))
 if( LUC == 4){
   for(r in 1:nrow(MET_data)){
@@ -340,8 +276,6 @@ if( LUC == 4){
 }
 
 # Ground resistance for SO2 
-RgS <- c(20, 70, 20, 200, 100, 200, 200, 100, 300, 200, 200, 200, 200, 
-         200, 200, 50, 200, 200, 200, 50, 300, 300, 50, 700, 200, 200)
 RgS_F <- array(RgS[LUC],nrow(MET_data))
 if(LUC == 2){
   RgS_F <-RgS[LUC] * (275.15 - MET_data$skt)
@@ -360,17 +294,6 @@ if(LUC == 2){
 }
 
 # Cuticle resistance for O3 AND SO2  
-# RcutO
-RcutdO <- c(-999, -999, -999, 4000, 6000, 4000, 6000, 6000, 8000, 6000, 5000, 5000, 4000, 
-            4000, 4000, 4000, 4000, 5000, 5000, 4000, 6000, 8000, 5000, -999, 4000, 4000)
-
-RcutwO <- c(-999, -999, -999, 200, 400, 200, 400, 400, 400, 400, 300, 300, 200, 200, 200,
-            200, 200, 300, 300, 200, 400, 400, 300, -999, 200, 200)
-
-RcutdS <- c(-999, -999, -999, 2000, 2500, 2000, 2500, 2500, 6000, 2000, 2000, 2000, 1000, 
-            1000, 1500, 1500, 2000, 2000, 2000, 2000, 4000, 2000, 1500, -999, 2500, 2500)
-
-
 RcutO_F <- array(0,nrow(MET_data))
 RcutS_F <- array(0,nrow(MET_data))
 if(RcutdO[LUC] <= -1){
@@ -403,8 +326,6 @@ if(RcutdO[LUC] <= -1){
 }
 
 # If snow occurs, Rg and Rcut are adjusted by snow cover fraction
-# sdmax
-sdmax <- c(9999, 1, 9999, 200, 400, 200, 200, 400, 200, 50, 50, 50, 5, 20, 10, 10, 10, 10, 10, 10, 50, 2, 10, 2, 200, 200)
 fsnow <- MET_data$sd/sdmax[LUC]
 fsnow[which(fsnow > 1)] <- 1  #snow cover fraction for leaves 
 RsnowS <- array(0,nrow(MET_data))
@@ -481,10 +402,6 @@ ANU=AMU/ROAROW
 lamda <- 0.0651 * (MET_data$t2m/298)^0.5
 Cc <- 1+2*lamda/Dp*(1.257+0.4*exp(-0.55*Dp/lamda)) 
 DIp <- 1.38E-23*MET_data$t2m*Cc/(3*pi*AMU*0.00000068)#particle diffusivity
-# PLLP1
-PLLP1 <- c(-0.9, -0.9, -0.9,  2, 5, 2, 5, 5, 5, 5, 5, 2, 2, 2, 2, 2, 5, 5, 5, 2, 10, -0.9, 10, -0.9, 5, 5)
-#PLLP2
-PLLP2 <- c(-0.9, -0.9, -0.9, 2, 5, 5, 10, 5, 10, 5, 10, 5, 5, 5, 5, 5, 10, 10, 10, 5, 10, -0.9, 10, -0.9, 5, 5)
 PLLP <- PLLP2[LUC] -(MET_data$LAI_F-min(LAI[,LUC]))/(max(LAI[,LUC])-min(LAI[,LUC])+1.E-10)*(PLLP2[LUC]-PLLP1[LUC])
 
 # CUNNINGHAM SLIP CORRECTION FACTOR AND RELAXATION TIME = vg/Grav.
@@ -512,13 +429,7 @@ for(r in 1:nrow(MET_data)){
     St[r] <- TAUREL[r] * MET_data$USTAR[r]/PLLP[r]*1000
   }
 }
-#gama
-gama <- c(0.5 , 0.54, 0.5, 0.56, 0.56, 0.56, 0.56, 0.58, 0.56, 0.55, 0.55, 0.54, 0.54, 0.55, 0.54, 0.54, 
-          0.54, 0.55, 0.54, 0.54, 0.56, 0.54, 0.54, 0.54, 0.56, 0.56)
 EB <- SCHM^(-gama[LUC]) 
-#AEST
-AEST <- c(100, 50, 100, 1, 0.8, 1.1, 0.8, 0.6, 1.0, 1.1, 1.1, 1.2, 1.2, 
-          1.2, 1.2, 1.2, 1.2, 1.1, 1.2, 1.2, 1.5, 50, 2, 50, 0.8, 0.8)
 EIM <- (St/(St+AEST[LUC]))^2
 EIN <- array(0,nrow(MET_data))
 for(r in 1:nrow(MET_data)){
