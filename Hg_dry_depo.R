@@ -2,13 +2,20 @@
 # Author: Joey/Jiaoyan Huang
 # Contact: jhuang@sonomatech.com
 # Created: 07/21/2020
+# The code is modified from Leimng Zhang's code described in Atmos. Chem. Phys., 3, 2067-2082, 2003
+# A revised parameterization for gaseous dry deposition in air-quality models
+# Zhang et al., 2002a Atmospheric Environment 36 (2002) 537-560 
+# Modelling gaseous dry deposition in AURAMS: a unified regional air-quality modelling system
+# Zhang et al., 2001 Atmospheric Environment 35 (2001) 549}560
+# A size-segregated particle dry deposition scheme for an atmospheric aerosol module
+
 library(readxl)
 # library(here) here seems not working well under gitbash condistion
 
 #functions
 # Define the function for saturation vapor pressure (mb)
-ES <- function(TEMP){
-  ES <- 6.108*exp(17.27*(TEMP - 273.16)/(TEMP - 35.86))
+ES <- function(TEMP, PRESS){
+  ES <- 6.108*exp(17.27*(TEMP - 273.16)/(TEMP - 35.86)) * PRESS/101325
   return(ES)
 } 
 
@@ -20,6 +27,7 @@ GLON   <- GLON_d/180*pi
 LUC    <- 22
 z2 <- 10
 
+
 # species info
 MW <- 271 #g/mole
 RM <- 500
@@ -27,6 +35,10 @@ ALPHA <- 2 # scaling factor
 BETA  <- 2 # scaling factor
 Dp <- 0.68 # paritcle diameter
 RHOP <- 1200  #1769 was used in Zhang et al 2001, but I feel 1200 make more sense to normal aerosol particle density kg/m3
+
+# data availabilty
+USTAR_provided <- TRUE #line 154
+
 setwd("C:/Users/jhuang/Dry_Depo_multi_res_model")  #where you download the repo
 # MET_file <- "C:/Users/jhuang/Desktop/JH other projects/Zepplin_GOMdrydepo_2019_so_V2.xlsx"
 source("Hg_dry_depo_related_data.R")
@@ -50,8 +62,10 @@ MET_data$RH <- MET_data$rh
 MET_data$LAI_F  = LAI[MET_data$IMO,LUC]+ MET_data$ID/ 30.5 * (LAI[MET_data$IMO,LUC]-LAI[MET_data$IMO+1,LUC])
 
 #calculate ES=saturation vapor pressure (mb) at 2 m and at soil surface
-MET_data$ES2= 6.108*exp(17.27*(MET_data$t2m - 273.16)/(MET_data$t2m - 35.86))
-MET_data$ESS= 6.108*exp(17.27*(MET_data$skt - 273.16)/(MET_data$skt - 35.86))
+# MET_data$ES2= 6.108*exp(17.27*(MET_data$t2m - 273.16)/(MET_data$t2m - 35.86))
+# MET_data$ESS= 6.108*exp(17.27*(MET_data$skt - 273.16)/(MET_data$skt - 35.86))
+MET_data$ES2= 6.108*exp(17.27*(MET_data$t2m - 273.16)/(MET_data$t2m - 35.86)) * MET_data$sp/101325 #consider the atmospheric pressure
+MET_data$ESS= 6.108*exp(17.27*(MET_data$skt - 273.16)/(MET_data$skt - 35.86)) * MET_data$sp/101325 #consider the atmospheric pressure
 MET_data$u2_adjusted <- 0
 for (r in nrow(MET_data)){
   #Set minimum wind speed as 1.0 m/s 
@@ -140,6 +154,10 @@ if(LUC == 1 | LUC == 3){
   ZL = z2/EL
   ZL10m=10./EL
 }
+#selct USTAR from your data
+if(USTAR_provided){
+  MET_data$USTAR <- MET_data$skt
+}
 
 # Aerodynamic resistance above canopy
 MET_data$Ra <- 0
@@ -215,7 +233,7 @@ GT <- GT^BT
 GT <- GT*(Temp-tmin[LUC])/(topt[LUC]-tmin[LUC]) 
 
 # function for vapor pressure deficit 
-ES_skt <- ES(MET_data$skt)
+ES_skt <- ES(MET_data$skt, MET_data$sp)
 D0 <- ES_skt*(1 - MET_data$RH)/10           # kPa 
 GD <- 1 -BVPD[LUC]*D0
 

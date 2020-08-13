@@ -2,6 +2,12 @@
 # Author: Joey/Jiaoyan Huang
 # Contact: jhuang@sonomatech.com
 # Created: 08/10/2020
+# The code is modified from Leimng Zhang's code described in Atmos. Chem. Phys., 3, 2067-2082, 2003
+# A revised parameterization for gaseous dry deposition in air-quality models
+# Zhang et al., 2002a Atmospheric Environment 36 (2002) 537-560 
+# Modelling gaseous dry deposition in AURAMS: a unified regional air-quality modelling system
+# Zhang et al., 2001 Atmospheric Environment 35 (2001) 549}560
+# A size-segregated particle dry deposition scheme for an atmospheric aerosol module
 
 # LAI data for different LUC
 # c(J, F, M, A, M, J, J, A, S, O, N, D, J, min, max)
