@@ -8,6 +8,15 @@
 # Modelling gaseous dry deposition in AURAMS: a unified regional air-quality modelling system
 # Zhang et al., 2001 Atmospheric Environment 35 (2001) 549}560
 # A size-segregated particle dry deposition scheme for an atmospheric aerosol module
+# please check all TODO lines
+
+# TODO overall JH 20200814
+# 1. separate gas and aerosol dry deposition velocity but they are sharing the same Ra in line 173
+# 2. differet size bins? currently the script can only handle a single particle size
+# 3. pressure correction, I've applied the correction for vapor pressure, but not sure diffusivity 
+# please check all lines contain TODO 
+# when you add a comment or edit lines, please add your initial and date
+# also, please do not delete the orginal lines in case we need it later
 
 library(readxl)
 # library(here) here seems not working well under gitbash condistion
@@ -24,7 +33,7 @@ GLAT_d <- 78.9
 GLON_d <- -11.9
 GLAT   <- GLAT_d/180*pi
 GLON   <- GLON_d/180*pi
-LUC    <- 22
+LUC    <- 22 # please see related data
 z2 <- 10
 
 
@@ -37,7 +46,7 @@ Dp <- 0.68 # paritcle diameter
 RHOP <- 1200  #1769 was used in Zhang et al 2001, but I feel 1200 make more sense to normal aerosol particle density kg/m3
 
 # data availabilty
-USTAR_provided <- TRUE #line 154
+USTAR_provided <- TRUE #see line 154
 
 setwd("C:/Users/jhuang/Dry_Depo_multi_res_model")  #where you download the repo
 # MET_file <- "C:/Users/jhuang/Desktop/JH other projects/Zepplin_GOMdrydepo_2019_so_V2.xlsx"
@@ -68,11 +77,10 @@ MET_data$ES2= 6.108*exp(17.27*(MET_data$t2m - 273.16)/(MET_data$t2m - 35.86)) * 
 MET_data$ESS= 6.108*exp(17.27*(MET_data$skt - 273.16)/(MET_data$skt - 35.86)) * MET_data$sp/101325 #consider the atmospheric pressure
 MET_data$u2_adjusted <- 0
 for (r in nrow(MET_data)){
-  #Set minimum wind speed as 1.0 m/s 
+  #Set minimum wind speed as 1.0 m/s, due to wind speed measurement uncertainties, this can be changed to another reasonable number
   MET_data$u2_adjusted[r] = max(MET_data$u2[r],1)
 }
 #Potential temperature at reference height Z2 
-#need to double check 2 as reference or 2-meter height
 MET_data$T2P = MET_data$t2m + z2 * 0.0098
 
 # calculating friction velocity and stability related varibles
@@ -124,7 +132,7 @@ if(LUC == 1 | LUC == 3){
   MET_data$RIB <- 9.81*z2*(MET_data$T2P - MET_data$skt)/(MET_data$skt*MET_data$u2^2)
   MET_data$RIB[which(MET_data$ssr > 0 & MET_data$RIB > 0)] <- 1E-15
   DELTAT <-  MET_data$T2P - MET_data$skt
-  DELTAT[which(abs(DELTAT) <= 1E-10)] <- 1E-10 #need double check
+  DELTAT[which(abs(DELTAT) <= 1E-10)] <- 1E-10 #TODO JH 20200814 need double check
   TBAR <- 0.5*(MET_data$T2P + MET_data$skt)
   RATIOZ <- z2/MET_data$Z0_F
   ASQ <- 0.16/log(RATIOZ)^2
@@ -158,7 +166,8 @@ if(LUC == 1 | LUC == 3){
 if(USTAR_provided){
   MET_data$USTAR <- MET_data$skt
 }
-
+# TODO JH 20200814
+# Also Dr Zhang suggest in Forest LCU, when USTAR < 0.5 use 0.5 especially for those MET data measured in a forest
 # Aerodynamic resistance above canopy
 MET_data$Ra <- 0
 # for ZL >= 0
@@ -254,7 +263,7 @@ RST[n]=1.0/(GSPAR[n]*GT[n]*GD[n]*GW[n])
 n <- which(GSUN == 0 | GSHAD ==0)
 RST[n] <- 99999.9
 RST[is.na(RST)] <- 99999.9
-# RST[which(RST > 99999.9)] <- 99999.9 # not sure a upper limit is needed 
+# RST[which(RST > 99999.9)] <- 99999.9 #TODO JH 20200814 not sure a upper limit is needed  
 # we are seeing about 70% data RST were replcaed by 99999.9, it is not way to off, 
 # Nevada's simulation, we usually see 50%
 
@@ -267,12 +276,12 @@ dewcode[which(MET_data$tcc >= 0.75)] <- 0.1
 DQ <- 0.622/1000 * ES_skt*(1 - MET_data$RH )*1000
 DQ[which(DQ < 0.0001)] <- 0.0001
 USmin <- 1.5/DQ*dewcode
-# not sure which dew check we should use
+# TODO JH 20200814 not sure which dew check we should use
 dew <- array(FALSE,nrow(MET_data))
 dew[which(MET_data$t2m > 273.15 & (MET_data$UTSTAR - USmin) >0)] <- TRUE
 # dew[which((MET_data$d2m - MET_data$t2m) > 0)] <- TRUE
 rain <- array(FALSE,nrow(MET_data))
-rain[which(MET_data$t2m > 273.15 & MET_data$tp > 0)] <- TRUE # use site specific number not 0.2
+rain[which(MET_data$t2m > 273.15 & MET_data$tp > 0)] <- TRUE # TODO JH 20200814 use site specific number not 0.2
 n <- which((dew == T | rain == T) & MET_data$ssrd > 200)
 WST[n] <- (MET_data$ssrd[n] - 200)/800
 WST[which(WST > 0.5)] <- 0.5
@@ -363,6 +372,8 @@ if(LUC == 4){
 
 # Calculate diffusivity for each gas species
 # dir density and water vapor density
+# TODO JH 20200814
+# I feel diffusivity is related to atmospheric pressure, but cannot find a simple equation to adjust the number
 dair <- 0.369*29 + 6.29  
 dh2o <- 0.369*18 + 6.29
 dgas <- 0.369*MW+6.29  
@@ -426,7 +437,7 @@ PLLP <- PLLP2[LUC] -(MET_data$LAI_F-min(LAI[,LUC]))/(max(LAI[,LUC])-min(LAI[,LUC
 PRII <- 2./9.*9.81/AMU
 PRIIV <- PRII*(RHOP-ROAROW)
 VPHIL <- 0
-CFAC <- 1+ AMFP/(Dp/2)*(AA1+AA2*exp(-AA3*Dp/2/AMFP)) #we don't use aerosol bin, so radius  = Dp/2
+CFAC <- 1+ AMFP/(Dp/2)*(AA1+AA2*exp(-AA3*Dp/2/AMFP)) #TODO JH 20200814 we don't use aerosol bin, so radius  = Dp/2
 TAUREL <- PRIIV*(Dp*1E-6/2)^2*CFAC/9.81 #Dp into meter
 TAUREL[which(TAUREL < 0)] <- 0
 
@@ -460,4 +471,4 @@ R1[which(R1 < 0.5)] <- 0.5
 MET_data$Rs <- 1/3/MET_data$USTAR/(EB+EIM+EIN)/R1
 
 # Deposition velocity 
-VDSIZE <- PDEPV + 1/(MET_data$Ra+MET_data$Rs) #m/s
+MET_data$VDSIZE <- PDEPV + 1/(MET_data$Ra+MET_data$Rs) #m/s

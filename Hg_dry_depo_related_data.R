@@ -8,6 +8,33 @@
 # Modelling gaseous dry deposition in AURAMS: a unified regional air-quality modelling system
 # Zhang et al., 2001 Atmospheric Environment 35 (2001) 549}560
 # A size-segregated particle dry deposition scheme for an atmospheric aerosol module
+# LUC
+# 1   water
+# 2   ice
+# 3   inland lake  
+# 4   evergreen needleleaf trees
+# 5   evergreen broadleaf trees
+# 6   deciduous needleleaf trees
+# 7   deciduous broadleaf trees
+# 8   tropical broadleaf trees
+# 9   drought deciduous t
+# 10  evergreen broadleaf shrubs
+# 11  deciduous shrubs 
+# 12  thorn shrubs
+# 13  short grass and forbs
+# 14  long grass
+# 15  crops
+# 16  rice
+# 17  sugar
+# 18  maize
+# 19  cotton
+# 20  irrigated crops
+# 21  urban 
+# 22  tundra
+# 23  swamp
+# 24  desert
+# 25  mixed wood forest
+# 26  transitional forest
 
 # LAI data for different LUC
 # c(J, F, M, A, M, J, J, A, S, O, N, D, J, min, max)
