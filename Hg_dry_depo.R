@@ -39,9 +39,20 @@ z2 <- 10
 
 # species info
 MW <- 271 #g/mole
-RM <- 500
+RM <- 100
 ALPHA <- 2 # scaling factor
 BETA  <- 2 # scaling factor
+# Alpha and Beta please see ZHang et al., 2003 and Lyman et al., 2007 SI
+# Zhang et al., 2003 outline a method for choosing scaling parameters for any
+# chemical species of interest based on the effective Henry's Law constant (H*) and the
+# negative log of electron activity for half-redox reactions in neutral solutions [pe0(W)]. In
+# this study, H* for HgCl2 and Hg(OH)2 were calculated using available data (5, 37). For
+# calculation of H* for HgCl2, [Cl-] was assumed to be 0.2 mg L-1, a typical value for
+# continental rainwater (38). pe0(W) was calculated for the half-redox reaction.
+# The calculated values for H* and pe0(W) were used to compare
+# RGM to gaseous species listed in Zhang et al. (23), and, based on evident similarity, the
+# scaling parameters listed for nitrous acid (HONO) were used to scale Rg and Rcut for
+# RGM (?? = ?? = 2).
 Dp <- 0.68 # paritcle diameter
 RHOP <- 1200  #1769 was used in Zhang et al 2001, but I feel 1200 make more sense to normal aerosol particle density kg/m3
 
@@ -164,10 +175,10 @@ if(LUC == 1 | LUC == 3){
 }
 #selct USTAR from your data
 if(USTAR_provided){
-  MET_data$USTAR <- MET_data$skt
+  MET_data$USTAR <- MET_data$zust
 }
 # TODO JH 20200814
-# Also Dr Zhang suggest in Forest LCU, when USTAR < 0.5 use 0.5 especially for those MET data measured in a forest
+# Also Dr Zhang suggests in Forest LCU, when USTAR < 0.5 use 0.5 especially for those MET data measured in a forest
 # Aerodynamic resistance above canopy
 MET_data$Ra <- 0
 # for ZL >= 0
